@@ -1,0 +1,1513 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "existingVNETName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the VNET to add a subnet to"
+            }
+        },
+        "newSubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet to add"
+            }
+        },
+        "newSubnetAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "Address space of the subnet to add"
+            }
+        },
+        "networkSecurityGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "networkSecurityGroupName for this new Subnet."
+            }
+        },
+         "applicationSecurityGroups_Z2IE_Management_ASG_externalid": {
+           
+            "type": "String"
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "networkSecurityGroupRules": {
+            "type": "array",
+            "defaultValue": [
+               {
+                        "name": "CCH_SSH_IN",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "10.78.72.68",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1101,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_Zabbix_IN",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "10050-10053",
+                            "sourceAddressPrefix": "10.78.72.69",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1102,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_GreyLog_IN",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "UDP",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "172.31.254.84",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1103,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "9000",
+                                "10514",
+                                "12201"
+                            ],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_TrendMicro_IN",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "4118-4123",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1104,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [
+                                "172.31.255.170",
+                                "10.78.72.68",
+                                "172.30.254.102",
+                                "172.30.254.164"
+                            ],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_DC_IN",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "8040-8057",
+                            "sourceAddressPrefix": "172.31.255.51",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1105,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_GFI_IN",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "172.31.255.185",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1106,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Management_RDP_IN",
+                        "properties": {
+                            "description": "Allows a user to use RDP via the management jump boxes",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1201,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                           
+                        }
+                    },
+                    {
+                        "name": "Management_SSH_IN",
+                        "properties": {
+                            "description": "Allows a user to use SSH via the management jump boxes",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1202,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                            
+                        }
+                    },
+                    {
+                        "name": "CITRIX_RDP_IN",
+                        "properties": {
+                            "description": "Allows a user to use RDP via the citrix environment",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1203,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [
+                                "10.4.105.0/24",
+                                "10.77.30.0/24"
+                            ],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CITRIX_SSH_IN",
+                        "properties": {
+                            "description": "Allows a user to use SSH via the citrix environment",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "10.4.105.0/24",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1204,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Qualys_IN",
+                        "properties": {
+                            "description": "Permits Qualys vunerability scanning",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "10.4.114.48",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3000,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Qualys_IN_2",
+                        "properties": {
+                            "description": "Permits Qualys vunerability scanning",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "10.7.14.1",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3001,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "SIEM_IN",
+                        "properties": {
+                            "description": "Permits trafic to Qradar for securinty management",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "10.4.106.242",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3002,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "135",
+                                "139",
+                                "445"
+                            ],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "SIEM_High_IN",
+                        "properties": {
+                            "description": "Permits trafic to Qradar for securinty management",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "49152-65535",
+                            "sourceAddressPrefix": "10.4.106.242",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 3003,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AllowAzureLoadBalancerInBound_1",
+                        "properties": {
+                            "description": "Repeats default rule at a higher prioriy.",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "AzureLoadbalancer",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4093,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "DenyAll_TCP_IN",
+                        "properties": {
+                            "description": "Overrides the default rule.",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 4094,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "DenyAll_UDP_IN",
+                        "properties": {
+                            "description": "Overrides the default rule.",
+                            "protocol": "UDP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 4095,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Permit_ICMP_IN",
+                        "properties": {
+                            "description": "Overrides the default rule.",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4096,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "LiveLink_SMTP_OUT",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "25",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "10.4.164.19",
+                            "access": "Allow",
+                            "priority": 101,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "LiveLink_Oracle_OUT",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "1521",
+                            "sourceAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 102,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": [
+                                "10.5.5.200/32",
+                                "10.5.5.201/32",
+                                "10.5.5.176"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "CCP_Zabbix_OUT",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "10050-10053",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "10.78.72.69",
+                            "access": "Allow",
+                            "priority": 1102,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_GreyLog_OUT",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "UDP",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "172.31.255.84",
+                            "access": "Allow",
+                            "priority": 1103,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "9000",
+                                "10514",
+                                "12201"
+                            ],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_TrendMicro_OUT",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1104,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "4118-4123",
+                                "443"
+                            ],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": [
+                                "172.31.255.170",
+                                "10.78.72.68",
+                                "172.30.254.102",
+                                "172.30.254.164"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "CCP_DC_Out",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "8040-8057",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "172.31.255.51",
+                            "access": "Allow",
+                            "priority": 1105,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_GFI_OUT",
+                        "properties": {
+                            "description": "Provides connectivity for CCP Support",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "172.31.255.185",
+                            "access": "Allow",
+                            "priority": 1106,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_ARS_OUT",
+                        "properties": {
+                            "description": "Permits Acess to Azure storage in west europe region for use with ASR",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "Storage.WestEurope",
+                            "access": "Allow",
+                            "priority": 1300,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_ARS_OUT_1",
+                        "properties": {
+                            "description": "Permits access to core Azure public services for use with ASR",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "AzureCloud",
+                            "access": "Allow",
+                            "priority": 1301,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AV_to_SIEM_OUT",
+                        "properties": {
+                            "description": "Permits Trend Micro Alerts to Qradar",
+                            "protocol": "UDP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "514",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "10.4.106.242",
+                            "access": "Allow",
+                            "priority": 3003,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_NTP_SYNC_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "UDP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "123",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4000,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_RPC_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "135",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4001,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_Kerberos_Change_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "464",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4002,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_LDAP_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4003,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_LDAP_GC_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3268",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4004,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_DNS_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "53",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4005,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_Kerberos_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "88",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4006,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_SMB_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "445",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4007,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_DYN_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "49152-65535",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4008,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_LDA_GC_SSL_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3269",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4009,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_LDAP_SSL_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "636",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4010,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_NetBIOS_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "UDP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "137",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4011,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_DFSN_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "139",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4012,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_DFS_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "UDP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "138",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4013,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_DFSR_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "5722",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4014,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_SOAP_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "9389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4015,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_DHCP_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "UDP",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4016,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "67",
+                                "2535"
+                            ],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AD_DYN_LOW_OUT",
+                        "properties": {
+                            "description": "Permits access to Azure based AD Domain Controllers",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "1024-5000",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4017,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "DenyInternetOutBound",
+                        "properties": {
+                            "description": "Overrides the default rule.",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "Internet",
+                            "access": "Deny",
+                            "priority": 4093,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "DenyAll_TCP_OUT",
+                        "properties": {
+                            "description": "Overrides the default rule.",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 4094,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "DenyAll_UDP_OUT",
+                        "properties": {
+                            "description": "Overrides the default rule.",
+                            "protocol": "UDP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 4095,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Permit_ICMP_OUT",
+                        "properties": {
+                            "description": "Overrides the default rule.",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4096,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Livlink_Coms_IN",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "10.78.6.96/28",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 102,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Citrix_HTTP_IN",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "80",
+                            "sourceAddressPrefix": "10.0.0.0/8",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 105,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "KMS_OUT",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "1688",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "10.0.0.0/8",
+                            "access": "Allow",
+                            "priority": 4020,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_GreyLog_EU_IN",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1107,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "10514",
+                                "12201"
+                            ],
+                            "sourceAddressPrefixes": [
+                                "172.30.254.155",
+                                "172.30.254.116",
+                                "172.30.254.174"
+                            ],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_GreyLog_EU_OUT",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1107,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "10514",
+                                "12201"
+                            ],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": [
+                                "172.30.254.155",
+                                "172.30.254.116",
+                                "172.30.254.174"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "CCP_MonitoringManagement_IN",
+                        "properties": {
+                            "description": "CRQC00000153930- Approved\n",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1108,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "22",
+                                "5985"
+                            ],
+                            "sourceAddressPrefixes": [
+                                "172.31.254.194",
+                                "172.31.254.114",
+                                "172.31.254.217",
+                                "172.31.254.183"
+                            ],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_MonitoringManagement_OUT",
+                        "properties": {
+                            "description": "CRQC00000153930- Approved\n",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1108,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "22",
+                                "5985-5986"
+                            ],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": [
+                                "172.31.254.194",
+                                "172.31.254.114",
+                                "172.31.254.217",
+                                "172.31.254.183",
+                                "172.30.255.30/32",
+                                "172.30.255.26/32",
+                                "172.30.255.112/32",
+                                "172.30.254.136/32",
+                                "172.30.254.118/32",
+                                "172.30.255.40/32",
+                                "172.30.255.50/32",
+                                "172.30.255.73/32",
+                                "172.30.255.35/32"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "Block_Blacklisted_IP",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 110,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [
+                                "185.220.102.7",
+                                "194.187.249.41",
+                                "18.144.98.239",
+                                "111.206.59.134",
+                                "111.206.52.101",
+                                "111.206.52.81",
+                                "111.206.59.142",
+                                "104.244.74.47",
+                                "104.168.166.234",
+                                "23.129.64.157",
+                                "27.115.124.70",
+                                "27.115.124.9",
+                                "27.115.124.74",
+                                "45.32.45.46",
+                                "45.83.67.200",
+                                "47.52.196.15",
+                                "47.52.196.152",
+                                "167.88.7.134",
+                                "185.212.170.163",
+                                "5.101.0.209",
+                                "185.220.101.69",
+                                "85.248.227.164",
+                                "192.236.192.119",
+                                "192.236.192.3",
+                                "94.140.114.194",
+                                "178.252.176.220",
+                                "185.141.63.163",
+                                "169.197.108.6",
+                                "208.100.26.237",
+                                "182.75.159.22",
+                                "121.42.205.30",
+                                "208.100.26.230",
+                                "71.6.146.186",
+                                "128.14.134.170",
+                                "120.27.107.165",
+                                "193.188.22.211",
+                                "81.45.139.249",
+                                "180.163.220.4",
+                                "185.173.35.17",
+                                "183.129.160.229",
+                                "77.247.108.162",
+                                "185.128.41.50",
+                                "122.228.19.79",
+                                "169.197.108.38",
+                                "199.229.249.188",
+                                "117.50.6.160",
+                                "176.12.107.132",
+                                "149.56.46.136",
+                                "95.155.45.153",
+                                "104.152.52.30",
+                                "51.15.37.97",
+                                "46.252.206.1",
+                                "46.29.248.238",
+                                "125.64.94.211",
+                                "89.248.169.12",
+                                "159.203.203.39",
+                                "119.18.195.194",
+                                "198.20.87.98",
+                                "185.220.100.254",
+                                "103.224.212.222",
+                                "221.235.184.101",
+                                "89.238.186.227",
+                                "89.238.150.3",
+                                "45.9.250.62",
+                                "194.99.104.28",
+                                "23.92.127.66",
+                                "199.229.249.183",
+                                "190.143.142.162",
+                                "10.7.1.63",
+                                "79.175.133.118",
+                                "171.67.70.0/23",
+                                "34.232.120.177",
+                                "107.6.183.226",
+                                "160.238.72.121",
+                                "216.218.206.86",
+                                "104.152.52.25",
+                                "172.104.242.173",
+                                "208.91.109.18",
+                                "104.168.215.54",
+                                "149.56.245.196",
+                                "104.168.198.208",
+                                "104.168.198.230",
+                                "104.168.201.47",
+                                "91.218.114.37",
+                                "91.218.114.77",
+                                "91.218.114.4",
+                                "91.218.114.11",
+                                "91.218.114.31",
+                                "91.218.114.79",
+                                "91.218.114.25",
+                                "91.218.114.26",
+                                "91.218.114.38",
+                                "91.218.114.32",
+                                "80.82.78.104",
+                                "31.214.243.135",
+                                "206.189.125.163",
+                                "206.189.187.113",
+                                "122.228.19.80",
+                                "128.14.133.58",
+                                "91.207.175.44",
+                                "51.89.173.35",
+                                "37.187.144.122",
+                                "209.97.179.187",
+                                "104.152.52.36",
+                                "180.163.220.3",
+                                "89.248.168.62",
+                                "183.136.225.46",
+                                "91.121.220.70",
+                                "138.68.14.63"
+                            ],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "UK_London_AnyConnect_IN",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 4001,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "22",
+                                "3389"
+                            ],
+                            "sourceAddressPrefixes": [
+                                "10.152.0.0/16",
+                                "10.160.0.0/16",
+                                "10.161.0.0/16",
+                                "10.156.0.0/16",
+                                "10.6.0.0/16",
+                                "10.4.0.0/16",
+                                "10.7.132.0/24",
+                                "10.7.133.0/24",
+                                "10.7.134.0/24",
+                                "10.7.135.0/24",
+                                "10.7.136.0/24",
+                                "10.7.139.0/24",
+                                "10.7.140.0/22",
+                                "10.128.248.0/21",
+                                "10.78.96.128/25",
+                                "10.78.225.128/26",
+                                "10.78.104.0/21",
+                                "10.78.232.0/21",
+                                "10.7.137.128/25",
+                                "10.116.48.0/24"
+                            ],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Exchange_SMTP_IN",
+                        "properties": {
+                            "description": "Exchange_SMTP_IN",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "25",
+                            "sourceAddressPrefix": "10.78.10.102/32",
+                            "destinationAddressPrefix": "10.78.6.112/28",
+                            "access": "Allow",
+                            "priority": 115,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Exchange_SMTP_OUT",
+                        "properties": {
+                            "description": "Exchange_SMTP_OUT",
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "25",
+                            "sourceAddressPrefix": "10.78.6.112/28",
+                            "destinationAddressPrefix": "10.78.10.102/32",
+                            "access": "Allow",
+                            "priority": 103,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_Autopilot_Skateboard_Turbine_Chatbot",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1109,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "5985-5986",
+                                "22"
+                            ],
+                            "sourceAddressPrefixes": [
+                                "172.30.255.30/32",
+                                "172.30.255.26/32",
+                                "172.30.255.112/32",
+                                "172.30.254.136/32",
+                                "172.30.254.118/32",
+                                "172.30.255.40/32",
+                                "172.30.255.50/32",
+                                "172.30.255.73/32",
+                                "172.30.255.35/32"
+                            ],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_Uyuni_IP_IN",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "172.30.255.15",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1110,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "80",
+                                "443",
+                                "22"
+                            ],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "CCP_Uyuni_IP_OUT",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "172.30.255.15",
+                            "access": "Allow",
+                            "priority": 1109,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [
+                                "80",
+                                "443",
+                                "22"
+                            ],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Allow_WinVdztoDMZ",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "access": "Allow",
+                            "priority": 120,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [
+                                "10.77.30.59",
+                                "10.77.30.65"
+                            ],
+                            "destinationAddressPrefixes": [
+                                "10.77.96.4",
+                                "10.77.96.5",
+                                "10.7.7.91",
+                                "10.7.7.163",
+                                "10.7.98.3",
+                                "10.7.98.2",
+                                "10.7.98.1",
+                                "10.7.98.4",
+                                "10.7.21.1",
+                                "10.7.7.22",
+                                "10.7.7.28",
+                                "10.77.32.4",
+                                "10.160.99.1",
+                                "10.7.2.1",
+                                "10.7.7.59",
+                                "10.77.32.5",
+                                "10.7.2.2",
+                                "10.7.7.21",
+                                "10.7.2.30",
+                                "10.7.7.179",
+                                "10.5.7.9",
+                                "10.7.7.161",
+                                "10.7.7.162",
+                                "10.7.7.88",
+                                "10.7.2.31",
+                                "10.7.2.5",
+                                "10.7.249.1",
+                                "10.78.9.117",
+                                "10.78.9.116",
+                                "10.78.5.53",
+                                "10.78.5.52",
+                                "10.78.132.52",
+                                "10.78.132.53",
+                                "10.7.7.44",
+                                "10.78.9.148",
+                                "10.78.9.149",
+                                "10.7.7.69",
+                                "10.7.7.197",
+                                "10.78.8.116",
+                                "10.78.8.117",
+                                "10.78.6.100",
+                                "10.78.6.101",
+                                "10.78.6.116",
+                                "10.78.8.84",
+                                "10.78.8.85",
+                                "10.7.7.135",
+                                "10.78.9.85",
+                                "10.7.7.90",
+                                "10.78.8.244",
+                                "10.7.7.78",
+                                "10.7.7.79",
+                                "10.7.7.136",
+                                "10.7.7.56",
+                                "10.7.7.38",
+                                "10.78.8.245",
+                                "10.78.8.196",
+                                "10.7.7.58",
+                                "10.7.7.150",
+                                "10.7.7.57",
+                                "10.7.7.65",
+                                "10.78.9.84",
+                                "10.7.7.31",
+                                "10.7.7.34",
+                                "10.7.7.173",
+                                "10.7.7.32",
+                                "10.78.8.197",
+                                "10.78.6.53",
+                                "10.7.7.30"
+                            ]
+                        }
+                    }
+            ],
+            "metadata": {
+                "description": "Rules."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "apiVersion": "2018-04-01",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat(parameters('existingVNETName'), '/', parameters('newSubnetName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('networkSecurityGroupName'))]"
+            ],
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressPrefix": "[parameters('newSubnetAddressPrefix')]",
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('networkSecurityGroupName'))]"
+                }
+            }
+           
+        },
+        {
+            "name": "[parameters('networkSecurityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules": "[parameters('networkSecurityGroupRules')]"
+            },
+            "tags": {
+                "Service": "myapp Team"
+            }
+        }
+    ]
+}

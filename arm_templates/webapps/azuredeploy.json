@@ -1,0 +1,239 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webappnames_slots": {
+            "type": "array",
+            "metadata": {
+                "description": "Array with the names for the environment webapp slots"
+            }
+        },
+        "webappnames": {
+            "type": "array",
+            "metadata": {
+                "description": "The names of the Web Apps"
+            }
+        },
+        "costcenter": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The name of the costcenter"
+            }
+        },
+        "appinsight": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The name of the costcenter"
+            }
+        },
+        "appservicename": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The name of the costcenter"
+            }
+        },
+        "environment": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The name of the Environment"
+            }
+        },
+        "owner": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The application Owner."
+            }
+        },
+        "webappsku": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Free",
+                "Shared",
+                "Basic",
+                "Standard"
+            ],
+            "metadata": {
+                "description": "The Web App pricing tier"
+            }
+        },
+        "workersize": {
+            "type": "string",
+            "defaultValue": "0",
+            "allowedValues": [
+                "0",
+                "1",
+                "2"
+            ],
+            "metadata": {
+                "description": "The Web App worker size"
+            }
+        }
+    },
+    "variables": {
+        "appservicename": "[concat(parameters('appservicename'),'-',parameters('environment'))]"
+    },
+    "resources": [
+        {
+            "name": "[variables('appservicename')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2014-06-01",
+            "dependsOn": [],
+            "tags": {
+                "displayName": "[variables('appservicename')]",
+                "environment": "[parameters('environment')]",
+                "costcenter": "[parameters('costcenter')]",
+                "owner": "[parameters('owner')]"
+            },
+            "properties": {
+                "name": "[variables('appservicename')]",
+                "sku": "[parameters('webappsku')]",
+                "workerSize": "[parameters('workersize')]",
+                "numberOfWorkers": 1
+            }
+        },
+        {
+            "name": "[parameters('webappnames')[copyIndex()]]",
+            "type": "Microsoft.Web/sites",
+            "kind": "[if(equals('app',if(contains(parameters('webappnames')[copyIndex()],'apiapp'), 'api','app')),if(contains(parameters('webappnames')[copyIndex()],'mobileapp'), 'mobileapp','app'),'api')]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-08-01",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', parameters('appservicename'),'-',parameters('environment'))]"
+            ],
+            "tags": {
+                "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('appservicename'),'-',parameters('environment'))]": "Resource",
+                "displayName": "[parameters('webAppNames')[copyIndex()]]",
+                "environment": "[parameters('environment')]",
+                "costcenter": "[parameters('costcenter')]",
+                "owner": "[parameters('owner')]"
+            },
+            "properties": {
+                "name": "[parameters('webappnames')[copyIndex()]]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', concat(parameters('appservicename'),'-',parameters('environment')))]",
+                "siteConfig": {
+                    "AlwaysOn": true
+                },
+                "applicationLogs": {
+                    "azureBlobStorage": {
+                        "level": "Error",
+                        "sasUrl": null,
+                        "retentionInDays": "365"
+                    }
+                },
+                "httpLogs": {
+                    "azureBlobStorage": {
+                        "level": "Error",
+                        "sasUrl": null,
+                        "retentionInDays": "365",
+                        "enabled": "true"
+                    }
+                },
+                "httpsOnly": true
+            },
+            "resources": [
+                {
+                    "apiVersion": "2015-08-01",
+                    "condition": "[equals(parameters('appinsight'), 'yes')]",
+                    "name": "appsettings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('webappnames')[copyIndex()])]"
+                    ],
+                    "properties": {
+                        "APPINSIGHTS_INSTRUMENTATIONKEY": "[if(equals(parameters('appinsight'), 'yes'), reference(concat('microsoft.insights/components/', concat(parameters('webappnames')[copyIndex()],'-','appinsight')), '2015-05-01').InstrumentationKey, json('null'))]"
+                    }
+                },
+                {
+                    "apiVersion": "2015-08-01",
+                    "condition": "[equals(parameters('appinsight'), 'yes')]",
+                    "name": "Microsoft.ApplicationInsights.AzureWebSites",
+                    "type": "siteextensions",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('webappnames')[copyIndex()])]"
+                    ],
+                    "properties": {}
+                }
+            ],
+            "copy": {
+                "name": "webapps",
+                "count": "[length(parameters('webappnames'))]"
+            }
+        },
+        {
+            "apiVersion": "2015-08-01",
+            "condition": "[equals(parameters('appinsight'), 'yes')]",
+            "name": "[concat(parameters('webappnames')[copyIndex()],'-','appinsight')]",
+            "type": "Microsoft.Insights/components",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/sites/', parameters('webappnames')[copyIndex()])]"
+            ],
+            "properties": {
+                "applicationId": "[parameters('webappnames')[copyIndex()]]"
+            },
+            "tags": {
+                "displayName": "[concat(parameters('webappnames')[copyIndex()],'-','appinsight')]",
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('webappnames')[copyIndex()])]": "Resource",
+                "environment": "[parameters('environment')]",
+                "costcenter": "[parameters('costcenter')]",
+                "owner": "[parameters('owner')]"
+            },
+            "copy": {
+                "name": "appinsightsforwebapps",
+                "count": "[length(parameters('webappnames'))]"
+            }
+        },
+        {
+            "apiVersion": "2016-08-01",
+            "type": "Microsoft.Web/sites/slots",
+            "name": "[concat(first(split(parameters('webappnames_slots')[copyIndex()],'*')), '/', last(split(parameters('webappnames_slots')[copyIndex()],'*')))]",
+            "kind": "[if(equals('app',if(contains(first(split(parameters('webappnames_slots')[copyIndex()],'-')),'apiapp'), 'api','app')),if(contains(first(split(parameters('webappnames_slots')[copyIndex()],'-')),'mobileapp'), 'api','app'),'api')]",
+            "location": "[resourceGroup().location]",
+            "comments": "This specifies the web app slots.",
+            "tags": {
+                "displayName": "[concat(first(split(parameters('webappnames_slots')[copyIndex()],'*')), '/', last(split(parameters('webappnames_slots')[copyIndex()],'*')))]",
+                "environment": "[parameters('environment')]",
+                "costcenter": "[parameters('costcenter')]",
+                "owner": "[parameters('owner')]"
+            },
+            "resources": [],
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('appservicename'),'-',parameters('environment')))]",
+                "siteConfig": {
+                    "AlwaysOn": true
+                },
+                "applicationLogs": {
+                    "azureBlobStorage": {
+                        "level": "Error",
+                        "sasUrl": null,
+                        "retentionInDays": "365"
+                    }
+                },
+                "httpLogs": {
+                    "azureBlobStorage": {
+                        "level": "Error",
+                        "sasUrl": null,
+                        "retentionInDays": "365",
+                        "enabled": "true"
+                    }
+                },
+                "httpsOnly": true
+            },
+            "dependsOn": [
+                "['webapps']",
+                "[resourceId('Microsoft.Web/Sites', first(split(parameters('webappnames_slots')[copyIndex()],'*')))]"
+            ],
+            "copy": {
+                "name": "webPortalSlot",
+                "count": "[length(parameters('webappnames_slots'))]"
+            }
+        }
+    ]
+}

@@ -1,0 +1,53 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sqlservername": {
+            "value": "myapp-myapp-sqlserver"
+        },
+        "sqlserveradminlogin": {
+            "value": "myapp-myapp-db-user"
+        },
+        "sqlserveradminloginpassword": {
+            "value": "myapp-myapp-db-user"
+        },
+        "sqldatabasename": {
+            "value": "myapp-myapp-db"
+        },
+        "db_instances": {
+            "value": [
+                "myapp-myapp-db-dev"
+            ]
+        },
+        "environment": {
+            "value": "nonprod"
+        },
+        "costcenter": {
+            "value": "myapp"
+        },
+        "owner": {
+            "value": "myapp"
+        },
+        "maxsizeinbytes": {
+            "value": "536870912000"
+        },
+        "sqldatabaseedition": {
+            "value": "Standard"
+        },
+        "capacity": {
+            "value": 100
+        },
+        "sqldatabaserequestedserviceobjectiveName": {
+            "value": "S2"
+        },
+        "storageAccountName": {
+            "value": "????"
+        },
+        "storageAccountResourceGroupName": {
+            "value": "????"
+        },
+        "accesskey": {
+            "value": "???"
+        }
+    }
+}

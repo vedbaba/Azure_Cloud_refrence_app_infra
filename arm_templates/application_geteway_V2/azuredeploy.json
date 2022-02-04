@@ -1,0 +1,610 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "applicationGatewayName": {
+      "type": "string"
+    },
+    "hostNames": {
+      "type": "array"
+    },
+    "publicCertData": {
+      "type": "securestring"
+    },
+    "publicIPAddressName": {
+      "type": "string"
+    },
+    "vnetID": {
+      "type": "string"
+    },
+    "subnetName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Specifies the location for all resources that is created by this template."
+      }
+    },
+    "applicationGatewaySize": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_v2",
+        "WAF_v2"
+      ],
+      "defaultValue": "Standard_v2",
+      "metadata": {
+        "description": "Specifies the application gateway SKU name."
+      }
+    },
+    "applicationGatewayCapacity": {
+      "type": "int",
+      "allowedValues": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Specifies the number of the application gateway instances."
+      }
+    },
+    "backendIpAddress1": {
+      "type": "string",
+      "defaultValue": "10.77.31.117",
+      "metadata": {
+        "description": "IP Address for Backend Server 1"
+      }
+    },
+    "backendIpAddress2": {
+      "type": "string",
+      "defaultValue": "10.77.31.118",
+      "metadata": {
+        "description": "IP Address for Backend Server 2"
+      }
+    },
+    "wafEnabled": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "WAF Enabled"
+      }
+    },
+    "wafMode": {
+      "type": "string",
+      "allowedValues": [
+        "Detection",
+        "Prevention"
+      ],
+      "defaultValue": "Detection",
+      "metadata": {
+        "description": "WAF Mode"
+      }
+    },
+    "wafRuleSetType": {
+      "type": "string",
+      "allowedValues": [
+        "OWASP"
+      ],
+      "defaultValue": "OWASP",
+      "metadata": {
+        "description": "WAF Rule Set Type"
+      }
+    },
+    "wafRuleSetVersion": {
+      "type": "string",
+      "allowedValues": [
+        "2.2.9",
+        "3.0"
+      ],
+      "defaultValue": "3.0",
+      "metadata": {
+        "description": "WAF Rule Set Version"
+      }
+    }
+  },
+  "variables": {
+    "subnetRef": "[concat(parameters('vnetID'),'/subnets/', parameters('subnetName'))]",
+    "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddressName'))]",
+    "applicationGatewayID": "[resourceId('Microsoft.Network/applicationGateways', parameters('applicationGatewayName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2019-04-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('publicIPAddressName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Service": "myapp Team"
+      },
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "apiVersion": "2019-09-01",
+      "name": "[parameters('applicationGatewayName')]",
+      "type": "Microsoft.Network/applicationGateways",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Service": "Digital Platform"
+      },
+      "dependsOn": [
+        "[parameters('publicIPAddressName')]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "WAF_v2",
+          "tier": "WAF_v2",
+          "capacity": 1
+        },
+        "gatewayIPConfigurations": [
+          {
+            "name": "appGatewayIpConfig",
+            "properties": {
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ],
+        "sslCertificates": [
+          {
+            "name": "myapp-assure-org-2020",
+            "properties": {
+              "data": "[parameters('publicCertData')]"
+              
+            }
+          }
+        ],
+        "trustedRootCertificates": [],
+
+        "frontendIPConfigurations": [
+          {
+            "name": "appGatewayFrontendIP",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "PublicIPAddress": {
+                "id": "[variables('publicIPRef')]"
+              }
+            }
+          }
+        ],
+        "frontendPorts": [
+          {
+            "name": "port_80",
+            "properties": {
+              "port": 80
+            }
+          },
+          {
+            "name": "port_81",
+            "properties": {
+              "port": 81
+            }
+          },
+          {
+            "name": "port_443",
+            "properties": {
+              "port": 443
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "demo-backend-pool",
+            "properties": {
+              "BackendAddresses": [
+                {
+                  "IpAddress": "[parameters('backendIpAddress2')]"
+                }
+              ]
+            }
+          },
+          {
+            "name": "lib-prod-backend-pool",
+            "properties": {
+              "BackendAddresses": [
+                {
+                  "IpAddress": "[parameters('backendIpAddress2')]"
+                }
+              ]
+            }
+          }
+        ],
+        "backendHttpSettingsCollection": [
+          {
+            "name": "appGatewayBackendHttpSettings",
+            "properties": {
+              "port": 80,
+              "protocol": "Http",
+              "cookieBasedAffinity": "Enabled",
+              "connectionDraining": {
+                "enabled": true,
+                "drainTimeoutInSec": 60
+              },
+              "pickHostNameFromBackendAddress": false,
+              "affinityCookieName": "ApplicationGatewayAffinity",
+              "requestTimeout": 180
+            }
+          }
+        ],
+        "httpListeners": [
+          {
+            "name": "appGatewayHttpsListener",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[0]]",
+              "requireServerNameIndication": true
+            }
+          },
+          {
+            "name": "appGatewayHttpsListener2",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[1]]",
+              "requireServerNameIndication": true
+            }
+          },
+          {
+            "name": "appGatewayHttpsListener3",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[2]]",
+              "requireServerNameIndication": true
+            }
+          },
+          {
+            "name": "appGatewayHttpsListener4",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[3]]",
+              "requireServerNameIndication": true
+            }
+          },
+          {
+            "name": "appGatewayHttpsListener5",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[4]]",
+              "requireServerNameIndication": true
+            }
+          },
+           {
+            "name": "prod-appGatewayHttpsListener",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[5]]",
+              "requireServerNameIndication": true
+            }
+          },
+
+           {
+            "name": "prod-appGatewayHttpsListener2",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[6]]",
+              "requireServerNameIndication": true
+            }
+          },
+
+           {
+            "name": "prod-appGatewayHttpsListener3",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[7]]",
+              "requireServerNameIndication": true
+            }
+          },
+
+           {
+            "name": "prod-appGatewayHttpsListener4",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[8]]",
+              "requireServerNameIndication": true
+            }
+          },
+
+           {
+            "name": "prod-appGatewayHttpsListener5",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "frontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/port_443')]"
+              },
+              "protocol": "Https",
+              "sslCertificate": {
+                "id": "[concat( variables('applicationGatewayID'), '/sslCertificates/myapp-assure-org-2020')]"
+              },
+              "hostNames": "[parameters('hostNames')[9]]",
+              "requireServerNameIndication": true
+            }
+          }
+        ],
+        "requestRoutingRules": [
+       
+          {
+            "name": "httpsinrule",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpsListener')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/demo-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+
+            }
+          },
+          {
+            "name": "httpsinrule2",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpsListener2')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/demo-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+
+            }
+          },
+          {
+            "name": "httpsinrule3",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpsListener3')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/demo-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+
+            }
+          },
+          {
+            "name": "httpsinrule4",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpsListener4')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/demo-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+
+            }
+          },
+          {
+            "name": "httpsinrule5",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpsListener5')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/demo-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+            }
+          },
+
+          {
+            "name": "prod-httpsinrule",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/prod-appGatewayHttpsListener')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/lib-prod-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+            }
+          },
+
+          {
+            "name": "prod-httpsinrule2",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/prod-appGatewayHttpsListener2')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/lib-prod-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+            }
+          },
+
+          {
+            "name": "prod-httpsinrule3",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/prod-appGatewayHttpsListener3')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/lib-prod-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+            }
+          },
+
+{
+            "name": "prod-httpsinrule4",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/prod-appGatewayHttpsListener4')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/lib-prod-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+            }
+          },
+
+
+          {
+            "name": "prod-httpsinrule5",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/prod-appGatewayHttpsListener5')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/lib-prod-backend-pool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+
+            }
+          }
+
+
+        ],
+
+        "webApplicationFirewallConfiguration": {
+          "enabled": "[parameters('wafEnabled')]",
+          "firewallMode": "[parameters('wafMode')]",
+          "ruleSetType": "[parameters('wafRuleSetType')]",
+          "ruleSetVersion": "[parameters('wafRuleSetVersion')]",
+          "disabledRuleGroups": [],
+          "requestBodyCheck": true,
+          "maxRequestBodySizeInKb": 128,
+          "fileUploamyappmitInMb": 100
+        },
+        "enableHttp2": true
+      }
+
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "keyVaultName": {
+      "value": "myappkv"
+    },
+    "skuName": {
+      "value": "Premium"
+    },
+    "objectId": {
+      "value": "230df430-3a61-4fdc-ac93-e3d2a47eb9f0"
+    }
+  }
+}

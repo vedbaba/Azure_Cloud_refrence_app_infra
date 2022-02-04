@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetworkName": {
+      "value": "myapp-vnet"
+    },
+    "location": {
+      "value": "northeurope"
+     },
+    "addressPrefixes": {
+      "value": [
+        "192.0.0.0/24"
+      ]
+    },
+    "subnets": {
+      "value": [{
+          "name": "agw_subnet",
+          "properties": {
+            "addressPrefix": "192.0.0.0/28"
+          }
+        },
+        {
+          "name": "apim_subnet",
+          "properties": {
+            "addressPrefix": "192.0.0.32/28"
+          }
+        },
+        {
+          "name": "app_subnet",
+          "properties": {
+            "addressPrefix": "192.0.0.64/28"
+          }
+        },
+        {
+          "name": "db_subnet",
+          "properties": {
+            "addressPrefix": "192.0.0.64/28"
+          }
+        }
+      ]
+    }
+  }
+}

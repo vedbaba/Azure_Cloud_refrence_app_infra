@@ -1,0 +1,55 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appinsightname": {
+            "type": "string",
+            "minLength": 1
+        },
+        "costcenter": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The app insight costcenter name."
+            }
+        },
+        "environment": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The app insight Environment."
+            }
+        },
+        "owner": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The application Owner."
+            }
+        }
+
+    },
+    "variables": {
+        "appinsightname": "[concat(parameters('appinsightname'),'-',parameters('environment'))]",
+         },
+    "resources": [
+        {
+            "apiVersion": "2015-05-01",
+            "name": "[variables('appinsightname')]",
+            "type": "Microsoft.Insights/components",
+            "location": "[resourceGroup().location]",
+            "kind": "web",
+            "properties": {
+                "applicationId": "[variables('appinsightname')]",
+                "Application_Type": "web"
+            },
+            "tags": {
+                "displayName": "[variables('appinsightname')]",
+                "environment": "[parameters('environment')]",
+                "costcenter": "[parameters('costcenter')]",
+                "owner": "[parameters('owner')]",
+                "Service": "myapp Team"
+            }
+        }
+    ]
+}

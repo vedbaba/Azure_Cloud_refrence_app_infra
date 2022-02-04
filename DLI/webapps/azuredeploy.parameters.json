@@ -1,0 +1,34 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appservicename": {
+            "value": "myapp-myapp-serviceplan"
+        },
+        "webappnames_slots": {
+            "value": ["myapp-myapp-apiapp*dev", "myapp-myapp-webapp*dev"]
+        },
+        "webappnames": {
+            "value": ["myapp-myapp-apiapp", "myapp-myapp-webapp"]
+        },
+        "environment": {
+            "value": "nonprod"
+        },
+        "costcenter": {
+            "value": "myapp"
+        },
+        "owner": {
+            "value": "myapp"
+        },
+        "appinsight": {
+            "value": "no"
+        },
+        "workersize": {
+            "value": "0"
+        },
+        "webappsku": {
+            "value": "Standard"
+
+        }
+    }
+}

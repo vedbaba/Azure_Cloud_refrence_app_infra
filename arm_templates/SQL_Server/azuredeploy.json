@@ -1,0 +1,279 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "consistencyLevel": {
+            "type": "string",
+            "defaultValue": "Session",
+            "allowedValues": [
+                "Eventual",
+                "Strong",
+                "Session",
+                "BoundedStaleness"
+            ],
+            "metadata": {
+                "description": "The Azure Cosmos DB default consistency level for this account."
+            }
+        },
+        "costcenter": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The app costcenter name."
+            }
+        },
+        "sqlservername": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The SQL server name."
+            }
+        },
+        "owner": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The application Owner."
+            }
+        },
+        "environment": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The SQL server Environment."
+            }
+        },
+        "sqlserveradminlogin": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The SQL server admin username."
+            }
+        },
+        "sqlserveradminloginpassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The SQL server admin password"
+            }
+        },
+        "sqldatabasename": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The SQL database name"
+            }
+        },
+        "sqldatabasecollation": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "SQL_Latin1_General_CP1_CI_AS",
+            "metadata": {
+                "description": "The SQL database collation"
+            }
+        },
+        "sqldatabaseedition": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Basic",
+                "Standard",
+                "Premium"
+            ],
+            "metadata": {
+                "description": "The SQL server edition"
+            }
+        },
+        "sqldatabaserequestedserviceobjectiveName": {
+            "type": "string",
+            "defaultValue": "S0",
+            "allowedValues": [
+                "Basic",
+                "S0",
+                "S1",
+                "S2",
+                "S3",
+                "P1",
+                "P2",
+                "P3"
+            ],
+            "metadata": {
+                "description": "Describes the performance level for Edition"
+            }
+        },
+        "db_instances": {
+            "type": "array",
+            "metadata": {
+                "description": "Array with the names for the database slots"
+            }
+        },
+        "webappsku": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Free",
+                "Shared",
+                "Basic",
+                "Standard"
+            ],
+            "metadata": {
+                "description": "The Web App pricing tier"
+            }
+        },
+        "workersize": {
+            "type": "string",
+            "defaultValue": "1",
+            "allowedValues": [
+                "0",
+                "1",
+                "2"
+            ],
+            "metadata": {
+                "description": "The Web App worker size"
+            }
+        },
+        "maxsizeinbytes": {
+            "type": "string",
+            "defaultValue": "1073741824",
+            "metadata": {
+                "description": "The database size iin bytes size"
+            }
+        },
+        
+        "capacity": {
+            "type": "int",
+            "defaultValue": 10,
+            "metadata": {
+                "description": "The database size iin bytes size"
+            }
+        },
+        "storageAccountName": {
+            "type": "string",
+            "defaultValue": "storageaccountname"
+        },
+        "storageEndpoint": {
+            "type": "string",
+            "defaultValue": "[concat('https://',parameters('storageAccountName'),'.blob.core.windows.net')]"
+        },
+        "storageAccountResourceGroupName": {
+            "type": "string",
+            "defaultValue": "storageAccountResourceGroupName"
+        },
+        "accesskey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The access key"
+            }
+        }
+    },
+    "variables": {
+        "sqlServerName": "[concat(parameters('sqlservername'),'-',parameters('environment'))]"
+    },
+    "resources": [
+        {
+            "name": "[variables('sqlServerName')]",
+            "type": "Microsoft.Sql/servers",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2019-06-01-preview",
+            "dependsOn": [
+            ],
+            "tags": {
+                "displayName": "[variables('sqlServerName')]",
+                "environment": "[parameters('environment')]",
+                "costcenter": "[parameters('costcenter')]",
+                "owner": "[parameters('owner')]",
+                "Service": "myapp Team"
+            },
+            "kind": "v12.0",
+            "properties": {
+                "administratorLogin": "[parameters('sqlserveradminlogin')]",
+                "administratorLoginPassword": "[parameters('sqlserveradminloginpassword')]",
+                "minimalTlsVersion": "1.2",
+                "version": "12.0"
+            },
+            "resources": [
+                {
+                    "name": "AllowAllWindowsAzureIps",
+                    "type": "firewallrules",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2014-04-01-preview",
+                    "dependsOn": [
+                        "[concat('Microsoft.Sql/servers/', concat(parameters('sqlservername'),'-',parameters('environment')))]"
+                    ],
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "0.0.0.0"
+                    }
+                },
+                {
+                    "apiVersion": "2015-05-01-preview",
+                    "type": "auditingSettings",
+                    "name": "Default",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Sql/servers/', concat(parameters('sqlservername'),'-',parameters('environment')))]",
+                        "SQLazuredb"
+                    ],
+                    "properties": {
+                        "State": "Enabled",
+                        "storageAccountName": "[parameters('storageAccountName')]",
+                        "storageEndpoint": "[parameters('storageEndpoint')]",
+                        "storageAccountResourceGroupName": "[parameters('storageAccountResourceGroupName')]",
+                        "storageAccountAccessKey": "[parameters('accesskey')]",
+                        "retentionDays": 365,
+                        "auditActionsAndGroups": null,
+                        "storageAccountSubscriptionId": "[subscription().subscriptionId]",
+                        "isStorageSecondaryKeyInUse": false
+                    }
+                }
+            ]
+        },
+        {
+            "name": "[concat(concat(parameters('sqlservername'),'-',parameters('environment')),'/',parameters('db_instances')[copyIndex()])]",
+            "type": "Microsoft.Sql/servers/databases",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2019-06-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.Sql/servers/', concat(parameters('sqlservername'),'-',parameters('environment')))]"
+            ],
+            "tags": {
+                "displayName": "[concat('SQL Database-',last(split(parameters('db_instances')[copyIndex()],'-')))]",
+                "environment": "[parameters('environment')]",
+                "costcenter": "[parameters('costcenter')]",
+                "owner": "[parameters('owner')]",
+                "Service": "myapp Team"
+            },
+            "kind": "v12.0,user",
+            "sku": {
+                "name": "[parameters('sqldatabaseedition')]",
+                "tier": "[parameters('sqldatabaseedition')]",
+                "capacity":"[parameters('capacity')]"
+            },
+            "properties": {
+                "collation": "[parameters('sqldatabasecollation')]",
+                "edition": "[parameters('sqldatabaseedition')]",
+                "maxSizeBytes": "[parameters('maxsizeinbytes')]",
+                "requestedServiceObjectiveName": "[parameters('sqldatabaserequestedserviceobjectiveName')]"
+            },
+            "copy": {
+                "name": "SQLazuredb",
+                "count": "[length(parameters('db_instances'))]"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies",
+            "apiVersion": "2017-10-01-preview",
+            "name": "[concat(concat(parameters('sqlservername'),'-',parameters('environment')),'/',parameters('db_instances')[copyIndex()],'/','default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', concat(parameters('sqlservername'),'-',parameters('environment')), parameters('db_instances')[copyIndex()])]",
+                "[concat('Microsoft.Sql/servers/', concat(parameters('sqlservername'),'-',parameters('environment')))]"
+            ],
+            "properties": {
+                "retentionDays": 35
+            },
+            "copy": {
+                "name": "SQLazuredb1",
+                "count": "[length(parameters('db_instances'))]"
+            }
+        }
+    ]
+}

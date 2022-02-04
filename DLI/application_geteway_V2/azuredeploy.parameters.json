@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "applicationGatewayName": {
+      "value": "myapp-myapp-api-gateways-test"
+    },
+    "publicCertData": {
+      "value": "test-secret"
+      }
+    },
+    "hostNames": {
+      "value": [
+        [
+          "myapp-test.com"
+        ] 
+      ]
+    },
+    "publicIPAddressName": {
+      "value": "lib-ag-demo-pip"
+    },
+    "vnetID": {
+      "value": "/subscriptions/subscriptionid/resourceGroups/lr_internal_network/providers/Microsoft.Network/virtualNetworks/lr_internal_net_vnet"
+    },
+    "subnetName": {
+      "value": ""
+    },
+    "applicationGatewaySize": {
+      "value": "Standard_v2"
+    },
+    "applicationGatewayCapacity": {
+      "value": 2
+    },
+    "backendIpAddress1": {
+      "value": "10.77.31.117"
+    },
+    "backendIpAddress2": {
+      "value": "10.77.31.118"
+    },
+    "wafEnabled": {
+      "value": true
+    },
+    "wafMode": {
+      "value": "Prevention"
+    },
+    "wafRuleSetType": {
+      "value": "OWASP"
+    },
+    "wafRuleSetVersion": {
+      "value": "3.0"
+    }
+  }
+}
